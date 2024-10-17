@@ -23,6 +23,12 @@ const processPageInWorker = (
     const worker = new Worker(path.join(__dirname, 'worker.ts'), {
       workerData: { pdfPath, page },
       execArgv: ['-r', 'ts-node/register'],
+      resourceLimits: {
+        maxYoungGenerationSizeMb: 16, // 16 MB для молодого поколения
+        maxOldGenerationSizeMb: 256, // 256 MB для старого поколения (основной кучи)
+        codeRangeSizeMb: 64, // 64 MB для области памяти сгенерированного кода
+        stackSizeMb: 8,
+      },
     });
 
     worker.on('message', ({ page, ocrResult, error }) => {

@@ -87,6 +87,7 @@ async function main() {
       },
     },
     async (request, reply) => {
+      console.time('PARSE_TIME');
       const mimetype = request.headers['content-type'];
       if (mimetype !== MIME_PDF) {
         return reply.code(415).send({ error: 'Unsupported Media Type' });
@@ -98,6 +99,8 @@ async function main() {
       try {
         // Конвертируем PDF в изображения и выполняем OCR параллельно
         const results = await convertPdfToImages(pdfBuffer, { startPage, endPage, limit });
+        results.sort((a, b) => a.page - b.page);
+        console.timeEnd('PARSE_TIME');
 
         reply.send({ results, processedPages: results.length });
       } catch (err) {

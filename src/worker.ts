@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { PDFImage } from 'pdf-image';
 import { parentPort, workerData } from 'worker_threads';
+
+import { PDFImage } from 'pdf-image';
+
 import { performOCR } from './ocr';
 
 require('ts-node/register');
@@ -27,7 +29,7 @@ require('ts-node/register');
 
     // Выполняем OCR
     const ocrResult = await performOCR(imageBuffer);
-
+    fs.unlinkSync(imagePath);
     console.log('page ', page, ' done'); // Возвращаем результат (номер страницы и текст) обратно в основной поток
     parentPort?.postMessage({ page, ocrResult, error: null });
   } catch (error) {
