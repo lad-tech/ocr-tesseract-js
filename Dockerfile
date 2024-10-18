@@ -1,5 +1,10 @@
-# Используем официальный образ Node.js
-FROM node:16
+# Используем официальный образ Node.js версии 18 (или выше)
+FROM node:18
+
+# Устанавливаем необходимые системные зависимости для sharp
+RUN apt-get update && apt-get install -y \
+  libvips-dev \
+  --no-install-recommends
 
 # Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
