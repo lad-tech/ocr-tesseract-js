@@ -1,10 +1,14 @@
-# Используем официальный образ Node.js версии 18 (или выше)
+# Используем официальный образ Node.js версии 18
 FROM node:18
 
-# Устанавливаем необходимые системные зависимости для sharp
+# Устанавливаем необходимые системные зависимости для sharp и ImageMagick
 RUN apt-get update && apt-get install -y \
   libvips-dev \
+  imagemagick \
   --no-install-recommends
+
+# Открываем политику безопасности для PDF в ImageMagick
+RUN sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read|write" pattern="PDF" \/>/' /etc/ImageMagick-6/policy.xml
 
 # Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
