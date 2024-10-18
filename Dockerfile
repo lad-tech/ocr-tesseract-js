@@ -5,8 +5,8 @@ FROM node:18
 RUN apt-get update && apt-get install -y \
   libvips-dev \
   imagemagick \
+  ghostscript \
   --no-install-recommends
-
 # Открываем политику безопасности для PDF в ImageMagick
 RUN sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read|write" pattern="PDF" \/>/' /etc/ImageMagick-6/policy.xml
 
