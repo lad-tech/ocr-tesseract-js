@@ -19,10 +19,10 @@ require('ts-node/register');
     const data = await pdf(pdfBuffer);
 
     // Извлекаем текст из всего документа и разбиваем по страницам
-    const pagesText: any[] = data.text.split(/\f/); // \f — разделитель страниц в pdf-parse
+    const pagesText: any[] = data.text.replace('\n', '').split(/\f/); // \f — разделитель страниц в pdf-parse
     if (page <= pagesText.length) {
       const extractedText = pagesText?.[page]?.trim();
-
+      console.log(extractedText);
       // Если на странице есть текст, возвращаем его
       if (extractedText?.length > 0) {
         parentPort?.postMessage({ page, ocrResult: extractedText, error: null });
