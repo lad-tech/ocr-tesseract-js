@@ -12,7 +12,7 @@ interface ConvertOptions {
 }
 
 // Получаем количество доступных ядер
-const numCPUs = os.cpus().length;
+const numCPUs = os.cpus().length - 1;
 
 // Функция для запуска воркера для обработки страницы
 const processPageInWorker = (

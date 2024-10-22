@@ -3,21 +3,38 @@ import path from 'path';
 import { parentPort, workerData } from 'worker_threads';
 
 import { PDFImage } from 'pdf-image';
+import pdf from 'pdf-parse'; // библиотека для парсинга PDF и извлечения текста
 
-import { performOCR } from './ocr';
+import { performOCR, processImage } from './ocr';
 
 require('ts-node/register');
+
 (async () => {
   try {
     const { pdfPath, page } = workerData;
-    console.log('page ', page, ' start');
     const outputDir = path.join(__dirname, '../output');
 
+    // Читаем PDF-файл и парсим его с помощью pdf-parse
+    const pdfBuffer = fs.readFileSync(pdfPath);
+    const data = await pdf(pdfBuffer);
+
+    // Извлекаем текст из всего документа и разбиваем по страницам
+    const pagesText: any[] = data.text.split(/\f/); // \f — разделитель страниц в pdf-parse
+    if (page <= pagesText.length) {
+      const extractedText = pagesText?.[page]?.trim();
+
+      // Если на странице есть текст, возвращаем его
+      if (extractedText?.length > 0) {
+        parentPort?.postMessage({ page, ocrResult: extractedText, error: null });
+        return;
+      }
+    }
+    // Если текста нет, продолжаем обработку через OCR
     const pdfImage = new PDFImage(pdfPath, {
       outputDir,
       convertOptions: {
         '-density': '300', // Плотность для рендеринга (качество)
-        '-quality': '100', // Качество изображения
+        '-quality': '70', // Качество изображения
       },
     });
 
@@ -25,15 +42,16 @@ require('ts-node/register');
     const imagePath = await pdfImage.convertPage(page);
 
     // Читаем сгенерированное изображение
-    const imageBuffer = fs.readFileSync(imagePath);
+    const imageBuffer = await processImage(imagePath);
 
     // Выполняем OCR
     const ocrResult = await performOCR(imageBuffer);
     fs.unlinkSync(imagePath);
-    console.log('page ', page, ' done'); // Возвращаем результат (номер страницы и текст) обратно в основной поток
+
+    // Возвращаем результат OCR
     parentPort?.postMessage({ page, ocrResult, error: null });
   } catch (error) {
-    // Если произошла ошибка, возвращаем номер страницы и ошибку
+    // Возвращаем ошибку
     parentPort?.postMessage({ page: workerData.page, ocrResult: null, error });
   }
 })();

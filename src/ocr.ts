@@ -2,17 +2,42 @@ import fs from 'fs';
 import path from 'path';
 
 import sharp from 'sharp';
-import { recognize } from 'tesseract.js';
+import { createWorker, OEM } from 'tesseract.js';
 
-const langPath = path.resolve(__dirname, '../testdata');
-
+const langPath = path.join(__dirname, '..', 'tessdata');
 export const performOCR = async (imageBuffer: Buffer): Promise<string> => {
-  const result = await recognize(imageBuffer, 'rus', {
-    langPath: langPath,
+  const worker = await createWorker(['eng', 'rus'], OEM.LSTM_ONLY, {
     gzip: false,
-    // logger: console.log,
+    cacheMethod: '',
+    legacyCore: false,
+    legacyLang: false,
+    langPath,
   });
-  return result.data.text;
+  const {
+    data: { text },
+  } = await worker.recognize(
+    imageBuffer,
+    {
+      pdfTextOnly: true,
+    },
+    {
+      text: true,
+      blocks: false,
+      layoutBlocks: false,
+      hocr: false,
+      tsv: false,
+      box: false,
+      unlv: false,
+      osd: false,
+      pdf: false,
+      imageColor: false,
+      imageGrey: false,
+      imageBinary: false,
+      debug: false,
+    },
+  );
+  await worker.terminate();
+  return text;
 };
 
 export const processImage = async (imagePath: string): Promise<Buffer> => {
@@ -22,5 +47,8 @@ export const processImage = async (imagePath: string): Promise<Buffer> => {
   return await sharp(imageBuffer)
     .greyscale() // Преобразование в градации серого
     .normalize() // Нормализация изображения
+    .jpeg({
+      quality: 70,
+    })
     .toBuffer();
 };
